@@ -139,7 +139,6 @@ class Game(AbstractGame):
 
     def __init__(self, seed=None):
         self.env = Stocks()
-        self.combined = pd.read_pickle("stocksReinforceCombined.p")
 
     def step(self, action):
         """
@@ -231,6 +230,7 @@ class Stocks:
         self.day = 1
         self.stockLookedAt = 1
         self.invested = numpy.zeros(self.numberOfStocks)
+        self.combined = pd.read_pickle("stocksReinforceCombined.p")
 
     def to_play(self):
         return 0
