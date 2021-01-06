@@ -4,6 +4,8 @@ import os
 import gym
 import numpy
 import torch
+import builtins
+import pandas as pd
 
 from .abstract_game import AbstractGame
 
@@ -244,7 +246,7 @@ class Stocks:
     def step(self, action):
         if action>=1 and action<=10:
             #Buying
-            stockPrice = combined.iloc[self.stockLookedAt-1, self.day-1]
+            stockPrice = builtins.combined.iloc[self.stockLookedAt-1, self.day-1]
             amountTryingToBuy = self.buyingPower*(action*10.0)/100.0 - 1 #For rounding we subtract 1
             if self.buyingPower >= amountTryingToBuy:
                 numOfStocksBought = amountTryingToBuy / stockPrice
@@ -253,7 +255,7 @@ class Stocks:
                 self.invested[self.stockLookedAt-1] = numOfStocksBought
         if action>10 and action<=20:
             #Selling
-            stockPrice = combined.iloc[self.stockLookedAt-1, self.day-1]
+            stockPrice = builtins.combined.iloc[self.stockLookedAt-1, self.day-1]
             numStockTryingToSell = int(self.invested[self.stockLookedAt-1] * (action*10.0)/100.0) #For rounding we subtract 1
             if numStockTryingToSell>0 and self.invested[self.stockLookedAt-1]>=numStockTryingToSell:
                 self.invested[self.stockLookedAt-1] = self.invested[self.stockLookedAt-1]-numStockTryingToSell
@@ -261,7 +263,7 @@ class Stocks:
 
         done = (self.day == 5983)
 
-        reward = self.buyingPower + self.invested[self.stockLookedAt-1]*combined.iloc[self.stockLookedAt-1, self.day]
+        reward = self.buyingPower + self.invested[self.stockLookedAt-1]*builtins.combined.iloc[self.stockLookedAt-1, self.day]
 
         if self.stockLookedAt>=self.numberOfStocks:
             self.day = self.day + 1
@@ -276,7 +278,7 @@ class Stocks:
         self.observation_shape = (self.numberOfStocks, 1, 4)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         allStocks = []
         for i in range(0, self.numberOfStocks):
-            stockPrice = combined.iloc[i, self.day-1]
+            stockPrice = builtins.combined.iloc[i, self.day-1]
             thisStock = [self.day, self.buyingPower, self.invested[i], stockPrice]
             allStocks.append(thisStock)
         return numpy.array(allStocks)
@@ -291,9 +293,7 @@ class Stocks:
         return (self.day == 5983)
 
     def render(self):
-        global combined
-
         print('Day:', self.day, 'Buying Power:', self.buyingPower)
         for i in range(0, self.numberOfStocks):
-            stockPrice = combined.iloc[i, self.day-1]
-            print('Price of', combined.iloc[i].name,':', stockPrice)
+            stockPrice = builtins.combined.iloc[i, self.day-1]
+            print('Price of', builtins.combined.iloc[i].name,':', stockPrice)
