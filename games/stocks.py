@@ -228,7 +228,7 @@ class Stocks:
         self.numberOfStocks = 2
         self.day = 1
         self.stockLookedAt = 1
-        self.invested = numpy.zeroes(self.numberOfStocks)
+        self.invested = numpy.zeros(self.numberOfStocks)
 
     def to_play(self):
         return 0
@@ -238,7 +238,7 @@ class Stocks:
         self.numberOfStocks = 2
         self.day = 1
         self.stockLookedAt = 1
-        self.invested = numpy.zeroes(self.numberOfStocks)
+        self.invested = numpy.zeros(self.numberOfStocks)
         return self.get_observation()
 
     def step(self, action):
