@@ -1,3 +1,4 @@
+import copy
 import importlib
 import math
 import os
@@ -62,11 +63,26 @@ class MuZero:
         torch.manual_seed(self.config.seed)
 
         # Manage GPUs
-        total_gpus = (
-            self.config.max_num_gpus
-            if self.config.max_num_gpus is not None
-            else torch.cuda.device_count()
-        )
+        if self.config.max_num_gpus == 0 and (
+            self.config.selfplay_on_gpu
+            or self.config.train_on_gpu
+            or self.config.reanalyse_on_gpu
+        ):
+            raise ValueError(
+                "Inconsistent MuZeroConfig: max_num_gpus = 0 but GPU requested by selfplay_on_gpu or train_on_gpu or reanalyse_on_gpu."
+            )
+        if (
+            self.config.selfplay_on_gpu
+            or self.config.train_on_gpu
+            or self.config.reanalyse_on_gpu
+        ):
+            total_gpus = (
+                self.config.max_num_gpus
+                if self.config.max_num_gpus is not None
+                else torch.cuda.device_count()
+            )
+        else:
+            total_gpus = 0
         self.num_gpus = total_gpus / split_resources_in
         if 1 < self.num_gpus:
             self.num_gpus = math.floor(self.num_gpus)
@@ -95,17 +111,9 @@ class MuZero:
         }
         self.replay_buffer = {}
 
-        # Trick to force DataParallel to stay on CPU
-        @ray.remote(num_cpus=0, num_gpus=0)
-        def get_initial_weights(config):
-            model = models.MuZeroNetwork(config)
-            weigths = model.get_weights()
-            summary = str(model).replace("\n", " \n\n")
-            return weigths, summary
-
-        self.checkpoint["weights"], self.summary = ray.get(
-            get_initial_weights.remote(self.config)
-        )
+        cpu_actor = CPUActor.remote()
+        cpu_weights = cpu_actor.get_initial_weights.remote(self.config)
+        self.checkpoint["weights"], self.summary = copy.deepcopy(ray.get(cpu_weights))
 
         # Workers
         self.self_play_workers = None
@@ -451,6 +459,19 @@ class MuZero:
         dm.close_all()
 
 
+@ray.remote(num_cpus=0, num_gpus=0)
+class CPUActor:
+    # Trick to force DataParallel to stay on CPU to get weights on CPU even if there is a GPU
+    def __init__(self):
+        pass
+
+    def get_initial_weights(self, config):
+        model = models.MuZeroNetwork(config)
+        weigths = model.get_weights()
+        summary = str(model).replace("\n", " \n\n")
+        return weigths, summary
+
+
 def hyperparameter_search(
     game_name, parametrization, budget, parallel_experiments, num_tests
 ):
@@ -463,9 +484,9 @@ def hyperparameter_search(
 
         parametrization : Nevergrad parametrization, please refer to nevergrad documentation.
 
-        budget (int): Number of experience to launch in total.
+        budget (int): Number of experiments to launch in total.
 
-        parallel_experiments (int): Number of experience to launch in parallel.
+        parallel_experiments (int): Number of experiments to launch in parallel.
 
         num_tests (int): Number of games to average for evaluating an experiment.
     """
