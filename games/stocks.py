@@ -137,7 +137,7 @@ class Game(AbstractGame):
     """
 
     def __init__(self, seed=None):
-        print('init game')
+        self.env = Stocks()
 
     def step(self, action):
         """
@@ -151,10 +151,6 @@ class Game(AbstractGame):
         """
         observation, reward, done = self.env.step(action)
         return observation, reward, done
-    
-    def sendData(self, data):
-        self.env = Stocks(data)
-
 
     def legal_actions(self):
         """
@@ -227,13 +223,12 @@ class Game(AbstractGame):
         return f"{action_number}. {actions[action_number]}"
 
 class Stocks:
-    def __init__(self, data):
+    def __init__(self):
         self.buyingPower = 5000
         self.numberOfStocks = 2
         self.day = 1
         self.stockLookedAt = 1
         self.invested = numpy.zeros(self.numberOfStocks)
-        self.combined = data
 
     def to_play(self):
         return 0
@@ -249,7 +244,7 @@ class Stocks:
     def step(self, action):
         if action>=1 and action<=10:
             #Buying
-            stockPrice = self.combined.iloc[self.stockLookedAt-1, self.day-1]
+            stockPrice = combined.iloc[self.stockLookedAt-1, self.day-1]
             amountTryingToBuy = self.buyingPower*(action*10.0)/100.0 - 1 #For rounding we subtract 1
             if self.buyingPower >= amountTryingToBuy:
                 numOfStocksBought = amountTryingToBuy / stockPrice
@@ -258,7 +253,7 @@ class Stocks:
                 self.invested[self.stockLookedAt-1] = numOfStocksBought
         if action>10 and action<=20:
             #Selling
-            stockPrice = self.combined.iloc[self.stockLookedAt-1, self.day-1]
+            stockPrice = combined.iloc[self.stockLookedAt-1, self.day-1]
             numStockTryingToSell = int(self.invested[self.stockLookedAt-1] * (action*10.0)/100.0) #For rounding we subtract 1
             if numStockTryingToSell>0 and self.invested[self.stockLookedAt-1]>=numStockTryingToSell:
                 self.invested[self.stockLookedAt-1] = self.invested[self.stockLookedAt-1]-numStockTryingToSell
@@ -266,7 +261,7 @@ class Stocks:
 
         done = (self.day == 5983)
 
-        reward = self.buyingPower + self.invested[self.stockLookedAt-1]*self.combined.iloc[self.stockLookedAt-1, self.day]
+        reward = self.buyingPower + self.invested[self.stockLookedAt-1]*combined.iloc[self.stockLookedAt-1, self.day]
 
         if self.stockLookedAt>=self.numberOfStocks:
             self.day = self.day + 1
@@ -281,7 +276,7 @@ class Stocks:
         self.observation_shape = (self.numberOfStocks, 1, 4)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         allStocks = []
         for i in range(0, self.numberOfStocks):
-            stockPrice = self.combined.iloc[i, self.day-1]
+            stockPrice = combined.iloc[i, self.day-1]
             thisStock = [self.day, self.buyingPower, self.invested[i], stockPrice]
             allStocks.append(thisStock)
         return numpy.array(allStocks)
@@ -298,5 +293,5 @@ class Stocks:
     def render(self):
         print('Day:', self.day, 'Buying Power:', self.buyingPower)
         for i in range(0, self.numberOfStocks):
-            stockPrice = self.combined.iloc[i, self.day-1]
-            print('Price of', self.combined.iloc[i].name,':', stockPrice)
+            stockPrice = combined.iloc[i, self.day-1]
+            print('Price of', combined.iloc[i].name,':', stockPrice)
