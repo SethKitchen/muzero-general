@@ -243,6 +243,7 @@ class Stocks:
         return self.get_observation()
 
     def step(self, action):
+        combined = os.environ['STOCKDATA']
         if action>=1 and action<=10:
             #Buying
             stockPrice = combined.iloc[self.stockLookedAt-1, self.day-1]
@@ -273,6 +274,7 @@ class Stocks:
         return self.get_observation(), reward, done
 
     def get_observation(self):
+        combined = os.environ['STOCKDATA']
         # Width is [DayNumber, BuyingPowerForStock, CurrentAmountInvestedInStock, CurrentPrice] 
         self.observation_shape = (self.numberOfStocks, 1, 4)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         allStocks = []
@@ -292,6 +294,7 @@ class Stocks:
         return (self.day == 5983)
 
     def render(self):
+        combined = os.environ['STOCKDATA']
         print('Day:', self.day, 'Buying Power:', self.buyingPower)
         for i in range(0, self.numberOfStocks):
             stockPrice = combined.iloc[i, self.day-1]
