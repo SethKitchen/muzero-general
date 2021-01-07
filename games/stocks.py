@@ -275,13 +275,13 @@ class Stocks:
 
     def get_observation(self):
         # Width is [DayNumber, BuyingPowerForStock, CurrentAmountInvestedInStock, CurrentPrice] 
-        self.observation_shape = (self.numberOfStocks, 1, 4)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         allStocks = []
         for i in range(0, self.numberOfStocks):
             stockPrice = self.combined.iloc[i, self.day-1]
             thisStock = [self.day, self.buyingPower, self.invested[i], stockPrice]
             allStocks.append(thisStock)
-        return numpy.array(allStocks)
+        toReturn = numpy.array(allStocks)
+        return toReturn.reshape((self.numberOfStocks,1,4))
 
     def legal_actions(self):
         legal = []
